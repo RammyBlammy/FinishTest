@@ -1,0 +1,53 @@
+services:
+
+  nginx:
+    image: nginx:stable
+    volumes:
+      - './nginx/nginx.conf:/etc/nginx/conf.d/default.conf'
+      - './src:/usr/share/nginx/html'
+    ports:
+      - '8080:80'
+    depends_on: 
+      - php
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=app
+      - DB_USER=app
+      - DB_PASS=12345678
+    volumes:
+      - './src:/usr/share/nginx/html'
+
+
+  db:
+    container_name: postgres
+    image: postgres:${POSTGRES_VERSION:-15}-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-12345678}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    volumes:
+      - db_data:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4:6.12
+    ports:
+      - 5080:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@citizix.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    volumes:
+      - pgadmin_data:/home/rundeck/server/data
+
+
+volumes:
+  db_data:
+  pgadmin_data:
+
